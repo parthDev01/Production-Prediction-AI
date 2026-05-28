@@ -1,5 +1,5 @@
 """
-Optimum Matrix — Flask Dashboard
+Production Predict — Flask Dashboard
 
 Run with:  python app.py
            Then open http://localhost:5000
@@ -10,7 +10,7 @@ import logging
 import argparse
 import pandas as pd
 from flask import Flask, render_template, request, jsonify
-from optimum_matrix import OptimumMatrix
+from production_predict import OptimumMatrix
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -129,7 +129,7 @@ def api_retrain():
 # ---------------------------------------------------------------------------
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Optimum Matrix Dashboard')
+    parser = argparse.ArgumentParser(description='Production Predict Dashboard')
     parser.add_argument('--train', default='data/train.xlsx', help='Path to training data (.xlsx)')
     parser.add_argument('--test', default='data/test.xlsx', help='Path to test/live data (.xlsx)')
     parser.add_argument('--port', type=int, default=5000)

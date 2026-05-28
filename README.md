@@ -1,8 +1,8 @@
-# Optimum Matrix
+# Production Predict
 
 **AI-driven web break prevention for paper and film manufacturing.**
 
-Optimum Matrix monitors 15+ real-time sensor streams across the dryer and cooling section of a converting line, predicts the probability of a web break up to 60 minutes ahead, and tells operators the exact parameter adjustments needed to prevent it — before resin has a chance to build up on the cooling rollers.
+Production Predict monitors 15+ real-time sensor streams across the dryer and cooling section of a converting line, predicts the probability of a web break up to 60 minutes ahead, and tells operators the exact parameter adjustments needed to prevent it — before resin has a chance to build up on the cooling rollers.
 
 ---
 
