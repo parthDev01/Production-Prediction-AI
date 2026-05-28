@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Optimum Matrix — Web Break Prevention</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: #0f1117;
+            color: #e1e4e8;
+            min-height: 100vh;
+        }
+
+        header {
+            background: linear-gradient(135deg, #1a1f2e 0%, #0d1117 100%);
+            border-bottom: 1px solid #30363d;
+            padding: 20px 32px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        header h1 { font-size: 1.5rem; font-weight: 700; color: #58a6ff; }
+        header span { color: #8b949e; font-size: 0.9rem; }
+
+        .stats-bar {
+            display: flex;
+            gap: 16px;
+            padding: 20px 32px;
+            background: #161b22;
+            border-bottom: 1px solid #21262d;
+            flex-wrap: wrap;
+        }
+        .stat {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 12px 20px;
+            min-width: 140px;
+        }
+        .stat-label { font-size: 0.75rem; color: #8b949e; text-transform: uppercase; letter-spacing: 0.05em; }
+        .stat-value { font-size: 1.4rem; font-weight: 700; margin-top: 4px; }
+        .stat-value.danger { color: #f85149; }
+        .stat-value.warn   { color: #d29922; }
+        .stat-value.ok     { color: #3fb950; }
+
+        .container { padding: 24px 32px; }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+            gap: 16px;
+        }
+
+        .card {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 10px;
+            overflow: hidden;
+            transition: border-color 0.2s;
+        }
+        .card:hover { border-color: #58a6ff; }
+
+        .card-header {
+            padding: 14px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #21262d;
+        }
+        .card-header .ts { font-size: 0.85rem; color: #8b949e; }
+
+        .risk-badge {
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+        }
+        .risk-HIGH   { background: rgba(248, 81, 73, 0.15); color: #f85149; border: 1px solid rgba(248,81,73,0.3); }
+        .risk-MEDIUM { background: rgba(210,153, 34, 0.15); color: #d29922; border: 1px solid rgba(210,153,34,0.3); }
+        .risk-LOW    { background: rgba( 63,185, 80, 0.15); color: #3fb950; border: 1px solid rgba(63,185,80,0.3); }
+
+        .card-body { padding: 16px 18px; }
+
+        .metrics { display: flex; gap: 16px; margin-bottom: 14px; flex-wrap: wrap; }
+        .metric { flex: 1; min-width: 100px; }
+        .metric-label { font-size: 0.72rem; color: #8b949e; text-transform: uppercase; letter-spacing: 0.04em; }
+        .metric-value { font-size: 1.1rem; font-weight: 600; margin-top: 2px; }
+
+        .prob-bar {
+            height: 6px;
+            border-radius: 3px;
+            background: #21262d;
+            margin: 8px 0 14px;
+            overflow: hidden;
+        }
+        .prob-fill { height: 100%; border-radius: 3px; transition: width 0.4s ease; }
+        .fill-HIGH   { background: linear-gradient(90deg, #f85149, #da3633); }
+        .fill-MEDIUM { background: linear-gradient(90deg, #d29922, #e3b341); }
+        .fill-LOW    { background: linear-gradient(90deg, #3fb950, #2ea043); }
+
+        .factor { font-size: 0.8rem; color: #8b949e; margin-bottom: 12px; }
+        .factor span { color: #58a6ff; font-weight: 600; }
+
+        details { margin-top: 8px; }
+        summary {
+            font-size: 0.8rem;
+            color: #58a6ff;
+            cursor: pointer;
+            user-select: none;
+            list-style: none;
+        }
+        summary::-webkit-details-marker { display: none; }
+        summary::before { content: '▶ '; font-size: 0.65rem; }
+        details[open] summary::before { content: '▼ '; }
+
+        .rec-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 0.8rem;
+        }
+        .rec-table th {
+            text-align: left;
+            color: #8b949e;
+            font-weight: 600;
+            padding: 5px 8px;
+            border-bottom: 1px solid #21262d;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            letter-spacing: 0.04em;
+        }
+        .rec-table td { padding: 6px 8px; border-bottom: 1px solid #161b22; }
+        .rec-table tr:last-child td { border-bottom: none; }
+        .change-pos { color: #3fb950; }
+        .change-neg { color: #f85149; }
+
+        .refresh-note {
+            text-align: center;
+            color: #8b949e;
+            font-size: 0.8rem;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div>
+        <h1>Optimum Matrix</h1>
+        <span>Web Break Prevention &amp; Resin Buildup Control</span>
+    </div>
+</header>
+
+{% set total = results | length %}
+{% set high_risk = results | selectattr('break_probability', 'gt', 0.7) | list | length %}
+{% set med_risk  = results | selectattr('break_probability', 'gt', 0.3) | selectattr('break_probability', 'le', 0.7) | list | length %}
+{% set low_risk  = total - high_risk - med_risk %}
+
+<div class="stats-bar">
+    <div class="stat">
+        <div class="stat-label">Total Readings</div>
+        <div class="stat-value" style="color:#58a6ff">{{ total }}</div>
+    </div>
+    <div class="stat">
+        <div class="stat-label">High Risk</div>
+        <div class="stat-value danger">{{ high_risk }}</div>
+    </div>
+    <div class="stat">
+        <div class="stat-label">Medium Risk</div>
+        <div class="stat-value warn">{{ med_risk }}</div>
+    </div>
+    <div class="stat">
+        <div class="stat-label">Low Risk</div>
+        <div class="stat-value ok">{{ low_risk }}</div>
+    </div>
+    <div class="stat">
+        <div class="stat-label">Break Alerts</div>
+        <div class="stat-value {{ 'danger' if high_risk > 0 else 'ok' }}">
+            {{ results | selectattr('break_prediction') | list | length }}
+        </div>
+    </div>
+</div>
+
+<div class="container">
+<div class="grid">
+{% for r in results %}
+{% set risk = 'HIGH' if r.break_probability > 0.7 else ('MEDIUM' if r.break_probability > 0.3 else 'LOW') %}
+<div class="card">
+    <div class="card-header">
+        <span class="ts">{{ r.timestamp }}</span>
+        <span class="risk-badge risk-{{ risk }}">{{ risk }} RISK</span>
+    </div>
+    <div class="card-body">
+        <div class="metrics">
+            <div class="metric">
+                <div class="metric-label">Break Probability</div>
+                <div class="metric-value">{{ (r.break_probability * 100) | round(1) }}%</div>
+            </div>
+            <div class="metric">
+                <div class="metric-label">Temp Forecast</div>
+                <div class="metric-value">{{ r.temp_prediction | round(2) }}°C</div>
+            </div>
+        </div>
+
+        <div class="prob-bar">
+            <div class="prob-fill fill-{{ risk }}" style="width: {{ (r.break_probability * 100) | round(1) }}%"></div>
+        </div>
+
+        <div class="factor">
+            Primary driver: <span>{{ r.top_factor.replace('_', ' ') }}</span>
+        </div>
+
+        {% if r.recommendations %}
+        <details>
+            <summary>Recommended Adjustments ({{ r.recommendations | length }} parameters)</summary>
+            <table class="rec-table">
+                <thead>
+                    <tr><th>Parameter</th><th>Current</th><th>Recommended</th><th>Change</th></tr>
+                </thead>
+                <tbody>
+                {% for param, vals in r.recommendations.items() %}
+                <tr>
+                    <td>{{ param.replace('_', ' ') }}</td>
+                    <td>{{ vals.current | round(2) }}</td>
+                    <td>{{ vals.recommended | round(2) }}</td>
+                    <td class="{{ 'change-pos' if vals.change >= 0 else 'change-neg' }}">
+                        {{ '+' if vals.change >= 0 else '' }}{{ vals.change | round(2) }}
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </details>
+        {% endif %}
+    </div>
+</div>
+{% endfor %}
+</div>
+
+<p class="refresh-note">Auto-refreshes every 30 seconds &nbsp;·&nbsp; Predictions horizon: 60 minutes ahead</p>
+</div>
+
+<script>
+    setTimeout(() => location.reload(), 30000);
+</script>
+</body>
+</html>
