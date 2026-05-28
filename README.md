@@ -13,7 +13,7 @@ Deployed and validated in a live production environment over a 6-month period (J
 | Metric | Before | After | Change |
 |---|---|---|---|
 | Resin/rewinder downtime | 2,780 min | 1,150 min | **−58.6%** |
-| Share of total downtime | 35.1% | 14.2% | **−21 ppt** |
+| Share of total downtime | 35.1% | 14.2% | **−20.9%** |
 
 > Total line downtime remained consistent across both periods, isolating the improvement specifically to the resin/rewinder failure mode — the targeted problem.
 
